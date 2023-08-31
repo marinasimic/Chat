@@ -28,7 +28,14 @@ def request_username(client_socket):
         raise Exception("User has left the chat.") 
 
 
-def handle_client(client_socket, username):
+def handle_client(client_socket):
+    try:
+        username = request_username(client_socket)
+        clients[username] = client_socket
+        broadcast_message(client_socket, "User {} has joined the chat.".format(username))
+    except:
+        return
+    
     while True:
         try:
             message = client_socket.recv(1024).decode('utf-8')
@@ -49,20 +56,14 @@ def handle_client(client_socket, username):
 
 if __name__ == '__main__':
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((config.HOST, config.PORT))
+    server_socket.bind(("0.0.0.0", config.PORT))
     server_socket.listen(5)
-    print(f"Server listening on {config.HOST}:{config.PORT}")
+    print(f"Server listening on port {config.PORT}...")
 
     while True:
         client_socket, client_address = server_socket.accept()
         print(f"Accepted connection from {client_address}")
 
-        try:
-            username = request_username(client_socket)
-            clients[username] = client_socket
-            broadcast_message(client_socket, "User {} has joined the chat.".format(username))
-
-            client_handler = threading.Thread(target=handle_client, args=(client_socket,username,))
-            client_handler.start()
-        except:
-            continue
+        
+        client_handler = threading.Thread(target=handle_client, args=(client_socket,))
+        client_handler.start()
