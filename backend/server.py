@@ -6,7 +6,7 @@ import utils
 clients = {}
 
 
-def broadcast_message(client_socket, message):
+def broadcast_message(message, client_socket=None):
     for client in clients.values():
         if client != client_socket:
             client.send(message.encode('utf-8'))
@@ -36,8 +36,8 @@ def handle_client(client_socket):
     try:
         username = request_username(client_socket)
         clients[username] = client_socket
-        broadcast_message(
-            client_socket, "User {} has joined the chat.".format(username))
+        broadcast_message("<span style=\"color:red;\">User {} has joined the chat.<span>".format(
+            username), client_socket)
     except:
         return
 
@@ -45,15 +45,25 @@ def handle_client(client_socket):
         try:
             message = client_socket.recv(1024).decode('utf-8')
             if not message:
+                broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
+                    username), client_socket)
                 break
 
-            message = username + ": " + message
-            print(message)
+            # if message == utils.SEND_ACTIVE_USERS:
+            #     active_users = ""
+            #     for client in clients.keys():
+            #         active_users += client
+            #         active_users += ","
+            #         client_socket.send(active_users.format(username)
+            #                            .encode('utf-8'))
+            #         continue
 
-            broadcast_message(client_socket, message)
+            message = "<b>" + username + ":</b> " + message
+
+            broadcast_message(message)
         except:
-            broadcast_message(
-                client_socket, "User {} has left the chat.".format(username))
+            broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
+                username), client_socket)
             break
 
     # Remove the client from the dictionary
