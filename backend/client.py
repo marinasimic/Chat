@@ -1,6 +1,8 @@
 import socket
 import threading
 from backend import config, utils
+import json
+
 
 
 class Client(object):
@@ -11,8 +13,11 @@ class Client(object):
         self.chatting = False
 
         self.messages = []
+        self.system_data = {}
+        self.system_data['active_users'] = self.username
         self.message_thread = threading.Thread(target=self.receive_messages)
         self.message_mutex = threading.Lock()
+        self.system_data_mutex = threading.Lock()
 
     def start_receiving_messages(self):
         self.chatting = True
@@ -25,13 +30,14 @@ class Client(object):
     def receive_messages(self):
         while self.chatting:
             try:
-                message = self.client_socket.recv(1024).decode('utf-8')
-
-                # if utils.SEND_ACTIVE_USERS in message:
-                #     continue
-
-                with self.message_mutex:
-                    self.messages.append(message)
+                message = json.loads(self.client_socket.recv(1024))
+                if message['type'] == 'message':
+                    with self.message_mutex:
+                        self.messages.append((message['user'], message['text']))
+                elif message['type'] == 'active_users':
+                    with self.system_data_mutex:
+                        self.system_data['active_users'] = message['users']
+                    
             except:
                 continue
 
@@ -44,13 +50,11 @@ class Client(object):
         return messages
     
     def get_active_users(self):
-        self.client_socket.send(utils.SEND_ACTIVE_USERS.encode('utf-8'))
+        users = []
+        with self.system_data_mutex:
+            users = self.system_data['active_users']
 
-        try:
-            message = self.client_socket.recv(1024).decode('utf-8')
-            return message
-        except:
-            return ""
+        return users
 
     def send_message(self, message):
         self.client_socket.send(message.encode('utf-8'))

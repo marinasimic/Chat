@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 from backend.client import Client
 
 client = Client()
@@ -69,6 +69,9 @@ class EnterUsernameWindow(QtWidgets.QWidget):
         self.lineedit.setPlaceholderText("Enter your username")
         self.lineedit.returnPressed.connect(self.connect)
         self.lineedit.textChanged.connect(self.on_text_changed)
+        pattern = QtCore.QRegularExpression('[^<]*')
+        validator = QtGui.QRegularExpressionValidator(pattern, self.lineedit)
+        self.lineedit.setValidator(validator)
 
         self.layout = QtWidgets.QBoxLayout(
             QtWidgets.QBoxLayout.Direction.TopToBottom, self)
@@ -109,18 +112,21 @@ class ChatWindow(QtWidgets.QWidget):
         self.lineedit.setFixedWidth(150)
         self.lineedit.setPlaceholderText("Enter your message")
         self.lineedit.returnPressed.connect(self.send_message)
+        self.lineedit.setFocus()
 
         self.chatBox = QtWidgets.QTextEdit()
         self.chatBox.setFixedSize(QtCore.QSize(150, 200))
-        self.chatBox.setDisabled(True)
+        self.chatBox.setReadOnly(True)
+        self.chatBox.ensureCursorVisible()
 
         self.activeUsers = QtWidgets.QTextEdit()
         self.activeUsers.setFixedSize(QtCore.QSize(70, 200))
-        self.activeUsers.setDisabled(True)
+        self.activeUsers.setReadOnly(True)
 
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.update_chat)
-        # self.timer.timeout.connect(self.update_active_users)
+        self.chatTimer = QtCore.QTimer(self)
+        self.chatTimer.timeout.connect(self.update_chat)
+        self.usersTimer = QtCore.QTimer(self)
+        self.usersTimer.timeout.connect(self.update_active_users)
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.addWidget(
@@ -136,7 +142,8 @@ class ChatWindow(QtWidgets.QWidget):
         self.setWindowTitle("Chatting at {0} as {1}".format(
             client.server_address, client.username))
 
-        self.timer.start(2000)
+        self.chatTimer.start(500)
+        self.usersTimer.start(1000)
 
     def closeEvent(self, event):
         event.ignore()
@@ -146,13 +153,14 @@ class ChatWindow(QtWidgets.QWidget):
     def update_chat(self):
         messages = client.get_messages()
         for message in messages:
-            self.chatBox.insertHtml(message)
+            self.chatBox.insertHtml("<b>" + message[0] + "</b>: ")
+            self.chatBox.insertPlainText(message[1])
             self.chatBox.insertHtml("<br>")
+            self.chatBox.verticalScrollBar().setValue(self.chatBox.verticalScrollBar().maximum())
 
-    # def update_active_users(self):
-    #     active_users = client.get_active_users()
-    #     active_users = active_users.replace(',', '\n')
-    #     self.activeUsers = active_users
+    def update_active_users(self):
+        active_users = client.get_active_users()
+        self.activeUsers.setHtml(active_users)
 
     @QtCore.Slot()
     def send_message(self):

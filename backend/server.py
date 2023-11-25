@@ -2,6 +2,7 @@ import socket
 import threading
 import config
 import utils
+import time
 
 clients = {}
 
@@ -20,17 +21,27 @@ def request_username(client_socket):
             username = client_socket.recv(1024).decode('utf-8')
 
             if username not in clients.keys():
-                client_socket.send(utils.USERNAME_VALID
-                                   .format(username)
-                                   .encode('utf-8'))
+                client_socket.send(utils.USERNAME_VALID.encode('utf-8'))
                 return username
 
-            client_socket.send(utils.INVALID_USERNAME
-                               .format(username)
-                               .encode('utf-8'))
+            client_socket.send(utils.INVALID_USERNAME.encode('utf-8'))
     except:
         raise Exception("User has left the chat.")
 
+
+def send_active_users():
+    while True:
+        active_users = ""
+        for client in clients.keys():
+            if active_users != "":
+                active_users += "<br>"
+            active_users += client
+
+        message = '{"type": "active_users", "users":"' + active_users + '"}'
+
+        broadcast_message(message)
+
+        time.sleep(3)
 
 def handle_client(client_socket):
     try:
@@ -43,23 +54,14 @@ def handle_client(client_socket):
 
     while True:
         try:
-            message = client_socket.recv(1024).decode('utf-8')
-            if not message:
+            input_message = client_socket.recv(1024).decode('utf-8')
+            if not input_message:
                 broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
                     username), client_socket)
                 break
 
-            # if message == utils.SEND_ACTIVE_USERS:
-            #     active_users = ""
-            #     for client in clients.keys():
-            #         active_users += client
-            #         active_users += ","
-            #         client_socket.send(active_users.format(username)
-            #                            .encode('utf-8'))
-            #         continue
-
-            message = "<b>" + username + ":</b> " + message
-
+            message = '{"type": "message", "user":"' + username + '", "text":"' + input_message + '"}'
+            
             broadcast_message(message)
         except:
             broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
@@ -84,3 +86,8 @@ if __name__ == '__main__':
         client_handler = threading.Thread(
             target=handle_client, args=(client_socket,))
         client_handler.start()
+
+        active_users_handler = threading.Thread(
+            target=send_active_users
+        )
+        active_users_handler.start()
