@@ -47,8 +47,8 @@ def handle_client(client_socket):
     try:
         username = request_username(client_socket)
         clients[username] = client_socket
-        broadcast_message("<span style=\"color:red;\">User {} has joined the chat.<span>".format(
-            username), client_socket)
+        broadcast_message('{"type": "user_status", "status": "User ' + username + ' has joined the chat."}',
+                          client_socket)
     except:
         return
 
@@ -56,17 +56,16 @@ def handle_client(client_socket):
         try:
             input_message = client_socket.recv(1024).decode('utf-8')
             if not input_message:
-                broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
-                    username), client_socket)
                 break
 
             message = '{"type": "message", "user":"' + username + '", "text":"' + input_message + '"}'
             
             broadcast_message(message)
         except:
-            broadcast_message("<span style=\"color:red;\">User {} has left the chat.<span>".format(
-                username), client_socket)
             break
+
+    broadcast_message('{"type": "user_status", "status": "User ' + username + ' has left the chat."}',
+                          client_socket)
 
     # Remove the client from the dictionary
     del clients[username]

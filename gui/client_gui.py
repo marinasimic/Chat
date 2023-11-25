@@ -153,9 +153,12 @@ class ChatWindow(QtWidgets.QWidget):
     def update_chat(self):
         messages = client.get_messages()
         for message in messages:
-            self.chatBox.insertHtml("<b>" + message[0] + "</b>: ")
-            self.chatBox.insertPlainText(message[1])
-            self.chatBox.insertHtml("<br>")
+            if len(message) == 2:
+                self.chatBox.insertHtml("<b>" + message[0] + "</b>: ")
+                self.chatBox.insertPlainText(message[1])
+                self.chatBox.insertHtml("<br>")
+            else:
+                self.chatBox.insertHtml("<span style=\"color:red;\">{}<span><br>".format(message[0]))
             self.chatBox.verticalScrollBar().setValue(self.chatBox.verticalScrollBar().maximum())
 
     def update_active_users(self):

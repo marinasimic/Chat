@@ -37,7 +37,9 @@ class Client(object):
                 elif message['type'] == 'active_users':
                     with self.system_data_mutex:
                         self.system_data['active_users'] = message['users']
-                    
+                elif message['type'] == 'user_status':
+                    with self.message_mutex:
+                        self.messages.append((message['status'],))
             except:
                 continue
 
