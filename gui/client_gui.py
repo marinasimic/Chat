@@ -25,13 +25,17 @@ class ConnectToServerWindow(QtWidgets.QWidget):
         self.lineedit.textChanged.connect(self.on_text_changed)
 
         self.layout = QtWidgets.QBoxLayout(
-            QtWidgets.QBoxLayout.Direction.TopToBottom, self)
+            QtWidgets.QBoxLayout.Direction.TopToBottom, self
+        )
         self.layout.addWidget(
-            self.lineedit, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.lineedit, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
         self.layout.addWidget(
-            self.errorLabel, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.errorLabel, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
         self.layout.addWidget(
-            self.button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
 
     def on_text_changed(self, text):
         self.errorLabel.setText("")
@@ -69,18 +73,22 @@ class EnterUsernameWindow(QtWidgets.QWidget):
         self.lineedit.setPlaceholderText("Enter your username")
         self.lineedit.returnPressed.connect(self.connect)
         self.lineedit.textChanged.connect(self.on_text_changed)
-        pattern = QtCore.QRegularExpression('[^<]*')
+        pattern = QtCore.QRegularExpression("[^<]*")
         validator = QtGui.QRegularExpressionValidator(pattern, self.lineedit)
         self.lineedit.setValidator(validator)
 
         self.layout = QtWidgets.QBoxLayout(
-            QtWidgets.QBoxLayout.Direction.TopToBottom, self)
+            QtWidgets.QBoxLayout.Direction.TopToBottom, self
+        )
         self.layout.addWidget(
-            self.lineedit, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.lineedit, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
         self.layout.addWidget(
-            self.errorLabel, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.errorLabel, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
         self.layout.addWidget(
-            self.button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
 
     def on_text_changed(self, text):
         self.errorLabel.setText("")
@@ -129,18 +137,15 @@ class ChatWindow(QtWidgets.QWidget):
         self.usersTimer.timeout.connect(self.update_active_users)
 
         self.layout = QtWidgets.QGridLayout(self)
-        self.layout.addWidget(
-            self.chatBox, 0, 0, 1, 1)
-        self.layout.addWidget(
-            self.activeUsers, 0, 1, 1, 1)
-        self.layout.addWidget(
-            self.lineedit, 1, 0, 1, 2)
-        self.layout.addWidget(
-            self.button, 2, 0, 1, 2)
+        self.layout.addWidget(self.chatBox, 0, 0, 1, 1)
+        self.layout.addWidget(self.activeUsers, 0, 1, 1, 1)
+        self.layout.addWidget(self.lineedit, 1, 0, 1, 2)
+        self.layout.addWidget(self.button, 2, 0, 1, 2)
 
     def showEvent(self, event):
-        self.setWindowTitle("Chatting at {0} as {1}".format(
-            client.server_address, client.username))
+        self.setWindowTitle(
+            "Chatting at {0} as {1}".format(client.server_address, client.username)
+        )
 
         self.chatTimer.start(500)
         self.usersTimer.start(2000)
@@ -158,8 +163,12 @@ class ChatWindow(QtWidgets.QWidget):
                 self.chatBox.insertPlainText(message[1])
                 self.chatBox.insertHtml("<br>")
             else:
-                self.chatBox.insertHtml("<span style=\"color:red;\">{}<span><br>".format(message[0]))
-            self.chatBox.verticalScrollBar().setValue(self.chatBox.verticalScrollBar().maximum())
+                self.chatBox.insertHtml(
+                    '<span style="color:red;">{}<span><br>'.format(message[0])
+                )
+            self.chatBox.verticalScrollBar().setValue(
+                self.chatBox.verticalScrollBar().maximum()
+            )
 
     def update_active_users(self):
         active_users = client.get_active_users()
