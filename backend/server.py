@@ -3,6 +3,7 @@ import threading
 import config
 import utils
 import time
+import sys
 
 clients = {}
 
@@ -10,7 +11,7 @@ clients = {}
 def broadcast_message(message, client_socket=None):
     for client in clients.values():
         if client != client_socket:
-            client.send(message.encode('utf-8'))
+            utils.send_message(client, message)
 
 
 def request_username(client_socket):
@@ -18,13 +19,13 @@ def request_username(client_socket):
         # Check if the username exist
         # Request the new one if username is already in use
         while True:
-            username = client_socket.recv(1024).decode('utf-8')
+            username =  utils.receive_message(client_socket)
 
             if username not in clients.keys():
-                client_socket.send(utils.USERNAME_VALID.encode('utf-8'))
+                utils.send_message(client_socket, utils.USERNAME_VALID)
                 return username
 
-            client_socket.send(utils.INVALID_USERNAME.encode('utf-8'))
+            utils.send_message(client_socket, utils.INVALID_USERNAME)
     except:
         raise Exception("User has left the chat.")
 
@@ -41,7 +42,7 @@ def send_active_users():
 
         broadcast_message(message)
 
-        time.sleep(3)
+        time.sleep(2)
 
 def handle_client(client_socket):
     try:
@@ -54,7 +55,7 @@ def handle_client(client_socket):
 
     while True:
         try:
-            input_message = client_socket.recv(1024).decode('utf-8')
+            input_message = utils.receive_message(client_socket)
             if not input_message:
                 break
 
@@ -78,15 +79,18 @@ if __name__ == '__main__':
     server_socket.listen(5)
     print(f"Server listening on port {config.PORT}...")
 
-    while True:
-        client_socket, client_address = server_socket.accept()
-        print(f"Accepted connection from {client_address}")
+    active_users_handler = threading.Thread(
+        target=send_active_users
+    )
+    active_users_handler.start()
 
-        client_handler = threading.Thread(
-            target=handle_client, args=(client_socket,))
-        client_handler.start()
+    try:
+        while True:
+            client_socket, client_address = server_socket.accept()
+            print(f"Accepted connection from {client_address}")
 
-        active_users_handler = threading.Thread(
-            target=send_active_users
-        )
-        active_users_handler.start()
+            client_handler = threading.Thread(
+                target=handle_client, args=(client_socket,))
+            client_handler.start()
+    except KeyboardInterrupt:
+        sys.exit(0)

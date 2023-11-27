@@ -30,7 +30,7 @@ class Client(object):
     def receive_messages(self):
         while self.chatting:
             try:
-                message = json.loads(self.client_socket.recv(1024))
+                message = json.loads(utils.receive_message(self.client_socket))
                 if message['type'] == 'message':
                     with self.message_mutex:
                         self.messages.append((message['user'], message['text']))
@@ -57,15 +57,15 @@ class Client(object):
             users = self.system_data['active_users']
 
         return users
-
+    
     def send_message(self, message):
-        self.client_socket.send(message.encode('utf-8'))
+       utils.send_message(self.client_socket, message)
 
     def enter_username(self, username):
-        self.client_socket.send(username.encode('utf-8'))
-
+        utils.send_message(self.client_socket, username)
+        
         try:
-            message = self.client_socket.recv(1024).decode('utf-8')
+            message = utils.receive_message(self.client_socket)
         except:
             return (False, "Couldn't connect to the server!")
 

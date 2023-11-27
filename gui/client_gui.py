@@ -143,7 +143,7 @@ class ChatWindow(QtWidgets.QWidget):
             client.server_address, client.username))
 
         self.chatTimer.start(500)
-        self.usersTimer.start(1000)
+        self.usersTimer.start(2000)
 
     def closeEvent(self, event):
         event.ignore()
